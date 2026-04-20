@@ -1,0 +1,148 @@
+// Mock data mirroring the actual poketrader database schema.
+// When the Spring Boot backend exposes REST endpoints, replace these
+// with fetch() calls (e.g. GET /api/cards, POST /api/auth/login, etc.)
+
+const CARDS = [
+  {id:1,  name:"Alakazam",    type:"Psychic",   hp:80,  set:"Base", rarity:"holo"},
+  {id:2,  name:"Blastoise",   type:"Water",     hp:100, set:"Base", rarity:"holo"},
+  {id:3,  name:"Chansey",     type:"Colorless", hp:120, set:"Base", rarity:"holo"},
+  {id:4,  name:"Charizard",   type:"Fire",      hp:120, set:"Base", rarity:"holo"},
+  {id:5,  name:"Clefairy",    type:"Colorless", hp:40,  set:"Base", rarity:"holo"},
+  {id:6,  name:"Gyarados",    type:"Water",     hp:100, set:"Base", rarity:"holo"},
+  {id:7,  name:"Hitmonchan",  type:"Fighting",  hp:70,  set:"Base", rarity:"holo"},
+  {id:8,  name:"Machamp",     type:"Fighting",  hp:100, set:"Base", rarity:"holo"},
+  {id:9,  name:"Magneton",    type:"Lightning", hp:60,  set:"Base", rarity:"holo"},
+  {id:10, name:"Mewtwo",      type:"Psychic",   hp:60,  set:"Base", rarity:"holo"},
+  {id:11, name:"Nidoking",    type:"Grass",     hp:90,  set:"Base", rarity:"holo"},
+  {id:12, name:"Ninetales",   type:"Fire",      hp:80,  set:"Base", rarity:"holo"},
+  {id:13, name:"Poliwrath",   type:"Water",     hp:90,  set:"Base", rarity:"holo"},
+  {id:14, name:"Raichu",      type:"Lightning", hp:80,  set:"Base", rarity:"holo"},
+  {id:15, name:"Venusaur",    type:"Grass",     hp:100, set:"Base", rarity:"holo"},
+  {id:16, name:"Zapdos",      type:"Lightning", hp:90,  set:"Base", rarity:"holo"},
+  {id:17, name:"Beedrill",    type:"Grass",     hp:80,  set:"Base", rarity:"rare"},
+  {id:18, name:"Dragonair",   type:"Colorless", hp:80,  set:"Base", rarity:"rare"},
+  {id:19, name:"Dugtrio",     type:"Fighting",  hp:70,  set:"Base", rarity:"rare"},
+  {id:20, name:"Electabuzz",  type:"Lightning", hp:70,  set:"Base", rarity:"rare"},
+  {id:21, name:"Electrode",   type:"Lightning", hp:80,  set:"Base", rarity:"rare"},
+  {id:22, name:"Pidgeotto",   type:"Colorless", hp:60,  set:"Base", rarity:"rare"},
+  {id:23, name:"Arcanine",    type:"Fire",      hp:100, set:"Base", rarity:"rare"},
+  {id:24, name:"Charmeleon",  type:"Fire",      hp:80,  set:"Base", rarity:"uncommon"},
+  {id:25, name:"Dewgong",     type:"Water",     hp:80,  set:"Base", rarity:"uncommon"},
+  {id:26, name:"Dratini",     type:"Colorless", hp:40,  set:"Base", rarity:"uncommon"},
+  {id:27, name:"Farfetch'd",  type:"Colorless", hp:50,  set:"Base", rarity:"uncommon"},
+  {id:28, name:"Growlithe",   type:"Fire",      hp:60,  set:"Base", rarity:"uncommon"},
+  {id:29, name:"Haunter",     type:"Psychic",   hp:60,  set:"Base", rarity:"uncommon"},
+  {id:30, name:"Ivysaur",     type:"Grass",     hp:60,  set:"Base", rarity:"uncommon"},
+  {id:31, name:"Jynx",        type:"Psychic",   hp:70,  set:"Base", rarity:"uncommon"},
+  {id:32, name:"Kadabra",     type:"Psychic",   hp:60,  set:"Base", rarity:"uncommon"},
+  {id:33, name:"Kakuna",      type:"Grass",     hp:80,  set:"Base", rarity:"uncommon"},
+  {id:34, name:"Machoke",     type:"Fighting",  hp:80,  set:"Base", rarity:"uncommon"},
+  {id:35, name:"Magikarp",    type:"Water",     hp:30,  set:"Base", rarity:"uncommon"},
+  {id:36, name:"Magmar",      type:"Fire",      hp:50,  set:"Base", rarity:"uncommon"},
+  {id:37, name:"Nidorino",    type:"Grass",     hp:60,  set:"Base", rarity:"uncommon"},
+  {id:38, name:"Poliwhirl",   type:"Water",     hp:60,  set:"Base", rarity:"uncommon"},
+  {id:39, name:"Porygon",     type:"Colorless", hp:30,  set:"Base", rarity:"uncommon"},
+  {id:40, name:"Raticate",    type:"Colorless", hp:60,  set:"Base", rarity:"uncommon"},
+  {id:41, name:"Seel",        type:"Water",     hp:60,  set:"Base", rarity:"uncommon"},
+  {id:42, name:"Wartortle",   type:"Water",     hp:70,  set:"Base", rarity:"uncommon"},
+  {id:43, name:"Abra",        type:"Psychic",   hp:30,  set:"Base", rarity:"common"},
+  {id:44, name:"Bulbasaur",   type:"Grass",     hp:40,  set:"Base", rarity:"common"},
+  {id:45, name:"Caterpie",    type:"Grass",     hp:40,  set:"Base", rarity:"common"},
+  {id:46, name:"Charmander",  type:"Fire",      hp:50,  set:"Base", rarity:"common"},
+  {id:47, name:"Diglett",     type:"Fighting",  hp:30,  set:"Base", rarity:"common"},
+  {id:48, name:"Doduo",       type:"Colorless", hp:50,  set:"Base", rarity:"common"},
+  {id:49, name:"Drowzee",     type:"Psychic",   hp:50,  set:"Base", rarity:"common"},
+  {id:50, name:"Gastly",      type:"Psychic",   hp:30,  set:"Base", rarity:"common"},
+  {id:51, name:"Koffing",     type:"Grass",     hp:50,  set:"Base", rarity:"common"},
+  {id:52, name:"Machop",      type:"Fighting",  hp:50,  set:"Base", rarity:"common"},
+  {id:53, name:"Magnemite",   type:"Lightning", hp:40,  set:"Base", rarity:"common"},
+  {id:54, name:"Metapod",     type:"Grass",     hp:70,  set:"Base", rarity:"common"},
+  {id:55, name:"Nidoran M",   type:"Grass",     hp:40,  set:"Base", rarity:"common"},
+  {id:56, name:"Onix",        type:"Fighting",  hp:90,  set:"Base", rarity:"common"},
+  {id:57, name:"Pidgey",      type:"Colorless", hp:40,  set:"Base", rarity:"common"},
+  {id:58, name:"Pikachu",     type:"Lightning", hp:40,  set:"Base", rarity:"common"},
+  {id:59, name:"Poliwag",     type:"Water",     hp:40,  set:"Base", rarity:"common"},
+  {id:60, name:"Ponyta",      type:"Fire",      hp:40,  set:"Base", rarity:"common"},
+  {id:61, name:"Rattata",     type:"Colorless", hp:30,  set:"Base", rarity:"common"},
+  {id:62, name:"Sandshrew",   type:"Fighting",  hp:40,  set:"Base", rarity:"common"},
+  {id:63, name:"Squirtle",    type:"Water",     hp:40,  set:"Base", rarity:"common"},
+  {id:64, name:"Starmie",     type:"Water",     hp:60,  set:"Base", rarity:"uncommon"},
+  {id:65, name:"Staryu",      type:"Water",     hp:40,  set:"Base", rarity:"common"},
+  {id:66, name:"Tangela",     type:"Grass",     hp:50,  set:"Base", rarity:"common"},
+  {id:67, name:"Voltorb",     type:"Lightning", hp:40,  set:"Base", rarity:"common"},
+  {id:68, name:"Vulpix",      type:"Fire",      hp:50,  set:"Base", rarity:"common"},
+  {id:69, name:"Weedle",      type:"Grass",     hp:40,  set:"Base", rarity:"common"},
+  // Trainer cards (no type/HP)
+  {id:70, name:"Clefairy Doll",         type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:71, name:"Computer Search",       type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:72, name:"Devolution Spray",      type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:73, name:"Impostor Professor Oak",type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:74, name:"Item Finder",           type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:75, name:"Lass",                  type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:76, name:"Pokemon Breeder",       type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:77, name:"Pokemon Trader",        type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:78, name:"Scoop Up",              type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:79, name:"Super Energy Removal",  type:"Trainer", hp:null, set:"Base", rarity:"rare"},
+  {id:80, name:"Defender",             type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:81, name:"Energy Retrieval",     type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:82, name:"Full Heal",            type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:83, name:"Maintenance",          type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:84, name:"PlusPower",            type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:85, name:"Pokemon Center",       type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:86, name:"Pokemon Flute",        type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:87, name:"Pokedex",              type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:88, name:"Professor Oak",        type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:89, name:"Revive",               type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:90, name:"Super Potion",         type:"Trainer", hp:null, set:"Base", rarity:"uncommon"},
+  {id:91, name:"Bill",                 type:"Trainer", hp:null, set:"Base", rarity:"common"},
+  {id:92, name:"Energy Removal",       type:"Trainer", hp:null, set:"Base", rarity:"common"},
+  {id:93, name:"Gust of Wind",         type:"Trainer", hp:null, set:"Base", rarity:"common"},
+  {id:94, name:"Potion",               type:"Trainer", hp:null, set:"Base", rarity:"common"},
+  {id:95, name:"Switch",               type:"Trainer", hp:null, set:"Base", rarity:"common"},
+  // Energy cards
+  {id:96,  name:"Double Colorless Energy", type:"Energy", hp:null, set:"Base", rarity:"uncommon"},
+  {id:97,  name:"Fighting Energy",         type:"Energy", hp:null, set:"Base", rarity:"common"},
+  {id:98,  name:"Fire Energy",             type:"Energy", hp:null, set:"Base", rarity:"common"},
+  {id:99,  name:"Grass Energy",            type:"Energy", hp:null, set:"Base", rarity:"common"},
+  {id:100, name:"Lightning Energy",        type:"Energy", hp:null, set:"Base", rarity:"common"},
+  {id:101, name:"Psychic Energy",          type:"Energy", hp:null, set:"Base", rarity:"common"},
+  {id:102, name:"Water Energy",            type:"Energy", hp:null, set:"Base", rarity:"common"},
+];
+
+// Mock registered users (in real app: stored in MySQL `user` table)
+const MOCK_USERS = [
+  { id:1, username:"ash",    password:"pikachu1", firstName:"Ash",    lastName:"Ketchum", role:"User" },
+  { id:2, username:"misty",  password:"staryu22", firstName:"Misty",  lastName:"Williams",role:"User" },
+  { id:3, username:"admin",  password:"admin123", firstName:"Prof.",   lastName:"Oak",    role:"Admin"},
+];
+
+// Moves sample (from schema: MoveID, Damage, Name, Element)
+const MOVES_SAMPLE = [
+  { moveId:1,  name:"Confuse Ray",    damage:null, element:"Psychic",   desc:"Flip a coin. If heads, the Defending Pokémon is now Confused." },
+  { moveId:2,  name:"Psyburn",        damage:30,   element:"Psychic",   desc:null },
+  { moveId:3,  name:"Hydro Pump",     damage:40,   element:"Water",     desc:"Does 40 damage plus 10 more damage for each Water Energy attached." },
+  { moveId:4,  name:"Flamethrower",   damage:50,   element:"Fire",      desc:"Discard 1 Fire Energy after attacking." },
+  { moveId:5,  name:"Thunderbolt",    damage:30,   element:"Lightning", desc:"Flip a coin. If heads, this attack does 30 damage plus 20 more." },
+  { moveId:6,  name:"Vine Whip",      damage:20,   element:"Grass",     desc:null },
+  { moveId:7,  name:"Brick Break",    damage:30,   element:"Fighting",  desc:null },
+  { moveId:8,  name:"Slash",          damage:20,   element:"Colorless", desc:null },
+];
+
+// Trade requests (matches schema: TradeID, InitiatorUserID, ReceiverUserID, InitiatorCardID, ReceiverCardID, Status)
+const MOCK_TRADES = [
+  { tradeId:1, initiator:"misty",  receiver:"ash",   initiatorCard:6, receiverCard:4,  status:"Request",  time:"2026-04-18 14:32" },
+  { tradeId:2, initiator:"ash",    receiver:"misty", initiatorCard:58, receiverCard:63, status:"Accepted", time:"2026-04-17 09:10" },
+  { tradeId:3, initiator:"admin",  receiver:"ash",   initiatorCard:10, receiverCard:14, status:"Denied",   time:"2026-04-16 20:05" },
+];
+
+const TYPE_COLORS = {
+  Fire:"#e8623a", Water:"#4a90d9", Grass:"#5aad50", Psychic:"#d95f8e",
+  Lightning:"#e8c437", Fighting:"#b84040", Colorless:"#8a8a8a",
+  Trainer:"#7b5ea7", Energy:"#4aa88a"
+};
+
+const TYPE_EMOJI = {
+  Fire:"🔥", Water:"💧", Grass:"🌿", Psychic:"🔮",
+  Lightning:"⚡", Fighting:"👊", Colorless:"⭐",
+  Trainer:"🃏", Energy:"✨"
+};

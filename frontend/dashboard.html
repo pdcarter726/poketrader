@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PokeTrader — Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="ball-sm"></div>
+      <span>PokeTrader</span>
+    </div>
+
+    <div class="nav-item active" data-page="cards" onclick="navigate('cards')">
+      <span class="icon">🃏</span> Card Browser
+    </div>
+    <div class="nav-item" data-page="collection" onclick="navigate('collection')">
+      <span class="icon">📦</span> My Collection
+    </div>
+    <div class="nav-item" data-page="trades" onclick="navigate('trades')">
+      <span class="icon">🔄</span> Trades
+      <span id="trade-badge" class="hidden" style="margin-left:auto;background:var(--accent);color:#fff;border-radius:10px;padding:1px 7px;font-size:.72rem;font-weight:700;"></span>
+    </div>
+    <div class="nav-item" data-page="profile" onclick="navigate('profile')">
+      <span class="icon">👤</span> Profile
+    </div>
+
+    <div class="sidebar-user">
+      <div class="avatar" id="sidebar-avatar"></div>
+      <div class="sidebar-user-info">
+        <div class="name" id="sidebar-name"></div>
+        <div class="role" id="sidebar-role"></div>
+      </div>
+      <button class="logout-btn" title="Logout" onclick="logout()">⏻</button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ── CARDS PAGE ── -->
+    <div class="page active" id="page-cards">
+      <div class="page-header">
+        <h2>Card Browser</h2>
+        <p>Browse all 102 Base Set cards. Click a card to see details.</p>
+      </div>
+
+      <div class="filter-bar">
+        <input class="search-input" type="text" id="card-search" placeholder="Search cards…" oninput="renderCards()">
+        <div class="type-filter" id="type-filter"></div>
+      </div>
+      <div class="results-count" id="results-count"></div>
+      <div class="cards-grid" id="cards-grid"></div>
+    </div>
+
+    <!-- ── COLLECTION PAGE ── -->
+    <div class="page" id="page-collection">
+      <div class="page-header">
+        <h2>My Collection</h2>
+        <p>Cards you've added from the browser. Reflects the <code>user_card</code> table.</p>
+      </div>
+
+      <div class="stats-row" id="col-stats"></div>
+
+      <div class="filter-bar">
+        <input class="search-input" type="text" id="col-search" placeholder="Search collection…" oninput="renderCollection()">
+      </div>
+      <div class="cards-grid" id="collection-grid"></div>
+    </div>
+
+    <!-- ── TRADES PAGE ── -->
+    <div class="page" id="page-trades">
+      <div class="page-header">
+        <h2>Trades</h2>
+        <p>Incoming and outgoing trade requests. Reflects the <code>trade</code> table.</p>
+      </div>
+      <div class="trade-list" id="trade-list"></div>
+    </div>
+
+    <!-- ── PROFILE PAGE ── -->
+    <div class="page" id="page-profile">
+      <div class="page-header">
+        <h2>Profile</h2>
+        <p>Your account details from the <code>user</code> table.</p>
+      </div>
+      <div id="profile-content"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CARD DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="card-modal">
+    <button class="close-btn" onclick="closeModalDirect()">✕</button>
+    <h3 id="modal-title"></h3>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="data.js"></script>
+<script>
+// ── AUTH GUARD ──────────────────────────────────────────────────────────────
+const user = JSON.parse(sessionStorage.getItem('pt_user') || 'null');
+if (!user) { window.location.href = 'index.html'; }
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let activeType = 'All';
+let collection = JSON.parse(localStorage.getItem(`pt_collection_${user.id}`) || '[]'); // array of cardIds
+let trades = [...MOCK_TRADES];
+
+// ── INIT ────────────────────────────────────────────────────────────────────
+function init() {
+  document.getElementById('sidebar-avatar').textContent = user.firstName[0].toUpperCase();
+  document.getElementById('sidebar-name').textContent   = `${user.firstName} ${user.lastName}`;
+  document.getElementById('sidebar-role').textContent   = user.role;
+
+  buildTypeFilter();
+  renderCards();
+  updateTradeBadge();
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+  if (page === 'collection') renderCollection();
+  if (page === 'trades')     renderTrades();
+  if (page === 'profile')    renderProfile();
+}
+
+// ── TYPE FILTER ──────────────────────────────────────────────────────────────
+function buildTypeFilter() {
+  const types = ['All','Fire','Water','Grass','Psychic','Lightning','Fighting','Colorless','Trainer','Energy'];
+  const el = document.getElementById('type-filter');
+  el.innerHTML = types.map(t =>
+    `<span class="type-chip ${t === 'All' ? 'active' : ''}" data-type="${t}" onclick="setType('${t}')">${t}</span>`
+  ).join('');
+}
+
+function setType(t) {
+  activeType = t;
+  document.querySelectorAll('.type-chip').forEach(c => c.classList.toggle('active', c.dataset.type === t));
+  renderCards();
+}
+
+// ── CARDS PAGE ───────────────────────────────────────────────────────────────
+function renderCards() {
+  const q = document.getElementById('card-search').value.toLowerCase();
+  const filtered = CARDS.filter(c => {
+    const typeMatch = activeType === 'All' || c.type === activeType;
+    const nameMatch = !q || c.name.toLowerCase().includes(q);
+    return typeMatch && nameMatch;
+  });
+
+  document.getElementById('results-count').textContent = `${filtered.length} card${filtered.length !== 1 ? 's' : ''} found`;
+  document.getElementById('cards-grid').innerHTML = filtered.map(c => cardTileHTML(c, false)).join('');
+}
+
+function cardTileHTML(c, inColView) {
+  const inCol = collection.includes(c.id);
+  const color = TYPE_COLORS[c.type] || '#888';
+  const emoji = TYPE_EMOJI[c.type] || '🃏';
+  const isHolo = c.rarity === 'holo';
+  const bg = `background: linear-gradient(135deg, ${color}22, ${color}11);`;
+
+  const btn = inColView
+    ? `<button class="rem-btn" onclick="removeFromCollection(${c.id},event)">− Remove</button>`
+    : inCol
+      ? `<button class="rem-btn" onclick="removeFromCollection(${c.id},event)">✓ In Collection</button>`
+      : `<button class="add-btn" onclick="addToCollection(${c.id},event)">+ Add to Collection</button>`;
+
+  return `
+  <div class="card-tile ${inCol ? 'in-collection' : ''}" onclick="openModal(${c.id})">
+    ${isHolo ? '<span class="holo-badge">HOLO</span>' : ''}
+    <div class="card-art" style="${bg}">${emoji}</div>
+    <div class="card-name">${c.name}</div>
+    <div class="card-meta">
+      ${c.hp ? `<span class="hp-badge">HP <strong>${c.hp}</strong></span>` : '<span></span>'}
+      <span class="type-badge" style="background:${color}">${c.type}</span>
+    </div>
+    <div class="card-set">${c.set} Set · ${capitalize(c.rarity)}</div>
+    ${btn}
+  </div>`;
+}
+
+// ── COLLECTION ───────────────────────────────────────────────────────────────
+function renderCollection() {
+  const colCards = CARDS.filter(c => collection.includes(c.id));
+  const q = document.getElementById('col-search').value.toLowerCase();
+  const filtered = q ? colCards.filter(c => c.name.toLowerCase().includes(q)) : colCards;
+
+  // Stats
+  const typeCounts = {};
+  colCards.forEach(c => { typeCounts[c.type] = (typeCounts[c.type] || 0) + 1; });
+  const topType = Object.entries(typeCounts).sort((a,b) => b[1]-a[1])[0];
+
+  document.getElementById('col-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${colCards.length}</div><div class="stat-lbl">Cards</div></div>
+    <div class="stat-card"><div class="stat-val">${Object.keys(typeCounts).length}</div><div class="stat-lbl">Types</div></div>
+    <div class="stat-card"><div class="stat-val">${colCards.filter(c=>c.rarity==='holo').length}</div><div class="stat-lbl">Holos</div></div>
+    ${topType ? `<div class="stat-card"><div class="stat-val" style="font-size:1.1rem">${topType[0]}</div><div class="stat-lbl">Top Type (${topType[1]})</div></div>` : ''}
+  `;
+
+  if (filtered.length === 0) {
+    document.getElementById('collection-grid').innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">📦</div>
+        <p>${colCards.length === 0 ? 'No cards yet — add some from the Card Browser.' : 'No cards match your search.'}</p>
+      </div>`;
+    return;
+  }
+  document.getElementById('collection-grid').innerHTML = filtered.map(c => cardTileHTML(c, true)).join('');
+}
+
+// ── TRADES ───────────────────────────────────────────────────────────────────
+function renderTrades() {
+  const myTrades = trades.filter(t => t.initiator === user.username || t.receiver === user.username);
+
+  if (myTrades.length === 0) {
+    document.getElementById('trade-list').innerHTML = `<div class="empty-state"><div class="icon">🔄</div><p>No trades yet.</p></div>`;
+    return;
+  }
+
+  document.getElementById('trade-list').innerHTML = myTrades.map(t => {
+    const initCard = CARDS.find(c => c.id === t.initiatorCard);
+    const recvCard = CARDS.find(c => c.id === t.receiverCard);
+    const isIncoming = t.receiver === user.username && t.status === 'Request';
+    const actions = isIncoming
+      ? `<div class="trade-actions">
+           <button class="btn-accept" onclick="respondTrade(${t.tradeId},'Accepted')">Accept</button>
+           <button class="btn-deny"   onclick="respondTrade(${t.tradeId},'Denied')">Deny</button>
+         </div>`
+      : `<div class="trade-actions"><span class="status-pill status-${t.status}">${t.status}</span></div>`;
+
+    return `
+    <div class="trade-card" id="trade-${t.tradeId}">
+      <div class="trade-side">
+        <div class="who">${t.initiator} offers</div>
+        <div class="what">${initCard ? initCard.name : '?'}</div>
+      </div>
+      <div class="trade-arrow">⇄</div>
+      <div class="trade-side">
+        <div class="who">${t.receiver} gives</div>
+        <div class="what">${recvCard ? recvCard.name : '?'}</div>
+      </div>
+      <div style="flex:1;font-size:.78rem;color:var(--text-muted);text-align:right">${t.time}</div>
+      ${actions}
+    </div>`;
+  }).join('');
+}
+
+function respondTrade(id, status) {
+  const t = trades.find(x => x.tradeId === id);
+  if (t) { t.status = status; renderTrades(); updateTradeBadge(); toast(`Trade ${status.toLowerCase()}.`); }
+}
+
+function updateTradeBadge() {
+  const pending = trades.filter(t => t.receiver === user.username && t.status === 'Request').length;
+  const badge = document.getElementById('trade-badge');
+  if (pending > 0) { badge.textContent = pending; badge.classList.remove('hidden'); }
+  else { badge.classList.add('hidden'); }
+}
+
+// ── PROFILE ──────────────────────────────────────────────────────────────────
+function renderProfile() {
+  document.getElementById('profile-content').innerHTML = `
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px;max-width:440px">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+        <div class="avatar" style="width:56px;height:56px;font-size:1.4rem">${user.firstName[0]}</div>
+        <div>
+          <div style="font-size:1.2rem;font-weight:800">${user.firstName} ${user.lastName}</div>
+          <div style="color:var(--text-muted);font-size:.85rem">@${user.username}</div>
+        </div>
+      </div>
+      <div class="modal-detail"><span class="lbl">User ID</span><span>#${user.id}</span></div>
+      <div class="modal-detail"><span class="lbl">Role</span><span>${user.role}</span></div>
+      <div class="modal-detail"><span class="lbl">Collection</span><span>${collection.length} card${collection.length !== 1 ? 's' : ''}</span></div>
+      <div class="modal-detail"><span class="lbl">Pending Trades</span><span>${trades.filter(t=>t.receiver===user.username&&t.status==='Request').length}</span></div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:.8rem;color:var(--text-muted)">
+        Note: Password is stored as a hash + salt in the <code>user</code> table (PasswordHash, PasswordSalt columns).
+      </div>
+    </div>`;
+}
+
+// ── COLLECTION ACTIONS ───────────────────────────────────────────────────────
+function addToCollection(id, e) {
+  e.stopPropagation();
+  if (!collection.includes(id)) {
+    collection.push(id);
+    saveCollection();
+    const card = CARDS.find(c => c.id === id);
+    toast(`Added ${card.name} to collection.`);
+    renderCards();
+  }
+}
+
+function removeFromCollection(id, e) {
+  e.stopPropagation();
+  collection = collection.filter(x => x !== id);
+  saveCollection();
+  const card = CARDS.find(c => c.id === id);
+  toast(`Removed ${card.name} from collection.`);
+  const activePage = document.querySelector('.page.active').id;
+  if (activePage === 'page-collection') renderCollection();
+  else renderCards();
+}
+
+function saveCollection() {
+  localStorage.setItem(`pt_collection_${user.id}`, JSON.stringify(collection));
+}
+
+// ── CARD DETAIL MODAL ────────────────────────────────────────────────────────
+function openModal(id) {
+  const c = CARDS.find(x => x.id === id);
+  if (!c) return;
+  const color = TYPE_COLORS[c.type] || '#888';
+  const emoji = TYPE_EMOJI[c.type] || '🃏';
+  const moves = MOVES_SAMPLE.filter(m => m.element === c.type).slice(0, 2);
+
+  document.getElementById('modal-title').textContent = c.name;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="text-align:center;font-size:3.5rem;margin-bottom:12px;background:linear-gradient(135deg,${color}22,${color}11);border-radius:10px;padding:14px">${emoji}</div>
+    <div class="modal-detail"><span class="lbl">Card ID</span><span>#${c.id}</span></div>
+    <div class="modal-detail"><span class="lbl">Type</span><span><span class="type-badge" style="background:${color}">${c.type}</span></span></div>
+    ${c.hp ? `<div class="modal-detail"><span class="lbl">HP</span><span>${c.hp}</span></div>` : ''}
+    <div class="modal-detail"><span class="lbl">Set</span><span>${c.set}</span></div>
+    <div class="modal-detail"><span class="lbl">Rarity</span><span>${capitalize(c.rarity)}${c.rarity==='holo'?' ⭐':''}</span></div>
+    <div class="modal-detail"><span class="lbl">In Collection</span><span>${collection.includes(c.id) ? '✅ Yes' : '—'}</span></div>
+    ${moves.length ? `
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+      <strong style="font-size:.85rem">Sample Moves</strong>
+      ${moves.map(m=>`<div style="margin-top:8px;font-size:.83rem"><strong>${m.name}</strong>${m.damage?` — ${m.damage} dmg`:''}${m.desc?`<br><span style="color:var(--text-muted)">${m.desc}</span>`:''}</div>`).join('')}
+    </div>` : ''}
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ── MISC HELPERS ─────────────────────────────────────────────────────────────
+function capitalize(s) { return s ? s[0].toUpperCase() + s.slice(1) : ''; }
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+function logout() {
+  sessionStorage.removeItem('pt_user');
+  window.location.href = 'index.html';
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModalDirect();
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PokeTrader — Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="ball"></div>
+      <h1>Poke<span>Trader</span></h1>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-login" onclick="showTab('login')">Login</button>
+      <button class="tab-btn"        id="tab-reg"   onclick="showTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="Enter username" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn-primary">Login</button>
+      <div class="error-msg" id="login-error"></div>
+      <p class="demo-hint">Demo: <a onclick="fillDemo('ash','pikachu1')">ash / pikachu1</a> &nbsp;|&nbsp; <a onclick="fillDemo('admin','admin123')">admin / admin123</a></p>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+      <div class="form-group half-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="reg-first" placeholder="Ash" required>
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="reg-last" placeholder="Ketchum" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="reg-username" placeholder="Choose a username" required>
+      </div>
+      <div class="form-group">
+        <label>Password <small style="font-weight:400">(min 8 chars)</small></label>
+        <input type="password" id="reg-password" placeholder="Create a password" minlength="8" required>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="reg-confirm" placeholder="Repeat password" required>
+      </div>
+      <button type="submit" class="btn-primary">Create Account</button>
+      <div class="error-msg" id="reg-error"></div>
+    </form>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (sessionStorage.getItem('pt_user')) {
+      window.location.href = 'dashboard.html';
+    }
+
+    function showTab(tab) {
+      const isLogin = tab === 'login';
+      document.getElementById('login-form').classList.toggle('hidden', !isLogin);
+      document.getElementById('register-form').classList.toggle('hidden', isLogin);
+      document.getElementById('tab-login').classList.toggle('active', isLogin);
+      document.getElementById('tab-reg').classList.toggle('active', !isLogin);
+    }
+
+    function fillDemo(u, p) {
+      document.getElementById('login-username').value = u;
+      document.getElementById('login-password').value = p;
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = '';
+
+      // In production: POST /api/auth/login  { username, password }
+      const user = MOCK_USERS.find(u => u.username === username && u.password === password);
+      if (!user) {
+        errEl.textContent = 'Invalid username or password.';
+        return;
+      }
+
+      // Store session (in production: store JWT token from API response)
+      sessionStorage.setItem('pt_user', JSON.stringify({
+        id: user.id, username: user.username,
+        firstName: user.firstName, lastName: user.lastName, role: user.role
+      }));
+      // Initialize an empty collection for this user if none exists
+      if (!localStorage.getItem(`pt_collection_${user.id}`)) {
+        localStorage.setItem(`pt_collection_${user.id}`, JSON.stringify([]));
+      }
+      window.location.href = 'dashboard.html';
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const first    = document.getElementById('reg-first').value.trim();
+      const last     = document.getElementById('reg-last').value.trim();
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirm  = document.getElementById('reg-confirm').value;
+      const errEl    = document.getElementById('reg-error');
+      errEl.textContent = '';
+
+      // Validate (mirrors DB constraints)
+      if (/\d/.test(first) || /\d/.test(last)) {
+        errEl.textContent = 'Names must not contain numbers.'; return;
+      }
+      if (password.length < 8) {
+        errEl.textContent = 'Password must be at least 8 characters.'; return;
+      }
+      if (password !== confirm) {
+        errEl.textContent = 'Passwords do not match.'; return;
+      }
+      if (MOCK_USERS.some(u => u.username === username)) {
+        errEl.textContent = 'Username already taken.'; return;
+      }
+
+      // In production: POST /api/auth/register  { firstName, lastName, username, password }
+      const newUser = { id: MOCK_USERS.length + 1, username, password, firstName: first, lastName: last, role: 'User' };
+      MOCK_USERS.push(newUser);
+
+      sessionStorage.setItem('pt_user', JSON.stringify({
+        id: newUser.id, username, firstName: first, lastName: last, role: 'User'
+      }));
+      localStorage.setItem(`pt_collection_${newUser.id}`, JSON.stringify([]));
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>
