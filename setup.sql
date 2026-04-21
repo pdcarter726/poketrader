@@ -26,13 +26,17 @@ DROP TABLE IF EXISTS `card`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `card` (
   `CardID` int NOT NULL AUTO_INCREMENT,
-  `Name` varchar(255) DEFAULT NULL,
+  `Name` varchar(255) NOT NULL,
   `PrimaryType` varchar(255) DEFAULT NULL,
   `SecondaryType` varchar(255) DEFAULT NULL,
   `Grade` int DEFAULT NULL,
   `HP` int DEFAULT NULL,
-  `Set` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`CardID`)
+  `Set` varchar(100) NOT NULL,
+  PRIMARY KEY (`CardID`),
+  CONSTRAINT `chk_card_primary_type` CHECK (`PrimaryType` IS NULL OR `PrimaryType` IN ('Fire','Water','Grass','Psychic','Lightning','Fighting','Colorless')),
+  CONSTRAINT `chk_card_secondary_type` CHECK (`SecondaryType` IS NULL OR `SecondaryType` IN ('Fire','Water','Grass','Psychic','Lightning','Fighting','Colorless')),
+  CONSTRAINT `chk_card_grade` CHECK (`Grade` IS NULL OR `Grade` BETWEEN 1 AND 10),
+  CONSTRAINT `chk_card_hp` CHECK (`HP` IS NULL OR `HP` > 0)
 ) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -42,7 +46,7 @@ CREATE TABLE `card` (
 
 LOCK TABLES `card` WRITE;
 /*!40000 ALTER TABLE `card` DISABLE KEYS */;
-INSERT INTO `card` VALUES (1,'Alakazam','Psychic',NULL,42,80,'Base'),(2,'Blastoise','Water',NULL,52,100,'Base'),(3,'Chansey','Colorless',NULL,55,120,'Base'),(4,'Charizard','Fire',NULL,76,120,'Base'),(5,'Clefairy','Colorless',NULL,14,40,'Base'),(6,'Gyarados','Water',NULL,41,100,'Base'),(7,'Hitmonchan','Fighting',NULL,33,70,'Base'),(8,'Machamp','Fighting',NULL,67,100,'Base'),(9,'Magneton','Lightning',NULL,28,60,'Base'),(10,'Mewtwo','Psychic',NULL,53,60,'Base'),(11,'Nidoking','Grass',NULL,23,90,'Base'),(12,'Ninetales','Fire',NULL,32,80,'Base'),(13,'Poliwrath','Water',NULL,48,90,'Base'),(14,'Raichu','Lightning',NULL,40,80,'Base'),(15,'Venusaur','Grass',NULL,67,100,'Base'),(16,'Zapdos','Lightning',NULL,64,90,'Base'),(17,'Beedrill','Grass',NULL,32,80,'Base'),(18,'Dragonair','Colorless',NULL,33,80,'Base'),(19,'Dugtrio','Fighting',NULL,36,70,'Base'),(20,'Electabuzz','Lightning',NULL,35,70,'Base'),(21,'Electrode','Lightning',NULL,40,80,'Base'),(22,'Pidgeotto','Colorless',NULL,36,60,'Base'),(23,'Arcanine','Fire',NULL,45,100,'Base'),(24,'Charmeleon','Fire',NULL,32,80,'Base'),(25,'Dewgong','Water',NULL,42,80,'Base'),(26,'Dratini','Colorless',NULL,10,40,'Base'),(27,'Farfetch\'d','Colorless',NULL,20,50,'Base'),(28,'Growlithe','Fire',NULL,18,60,'Base'),(29,'Haunter','Psychic',NULL,22,60,'Base'),(30,'Ivysaur','Grass',NULL,20,60,'Base'),(31,'Jynx','Psychic',NULL,23,70,'Base'),(32,'Kadabra','Psychic',NULL,38,60,'Base'),(33,'Kakuna','Grass',NULL,23,80,'Base'),(34,'Machoke','Fighting',NULL,40,80,'Base'),(35,'Magikarp','Water',NULL,8,30,'Base'),(36,'Magmar','Fire',NULL,24,50,'Base'),(37,'Nidorino','Grass',NULL,25,60,'Base'),(38,'Poliwhirl','Water',NULL,28,60,'Base'),(39,'Porygon','Colorless',NULL,12,30,'Base'),(40,'Raticate','Colorless',NULL,41,60,'Base'),(41,'Seel','Water',NULL,12,60,'Base'),(42,'Wartortle','Water',NULL,22,70,'Base'),(43,'Abra','Psychic',NULL,10,30,'Base'),(44,'Bulbasaur','Grass',NULL,13,40,'Base'),(45,'Caterpie','Grass',NULL,13,40,'Base'),(46,'Charmander','Fire',NULL,10,50,'Base'),(47,'Diglett','Fighting',NULL,8,30,'Base'),(48,'Doduo','Colorless',NULL,10,50,'Base'),(49,'Drowzee','Psychic',NULL,10,50,'Base'),(50,'Gastly','Psychic',NULL,8,30,'Base'),(51,'Koffing','Grass',NULL,13,50,'Base'),(52,'Machop','Fighting',NULL,20,50,'Base'),(53,'Magnemite','Lightning',NULL,13,40,'Base'),(54,'Metapod','Grass',NULL,21,70,'Base'),(55,'Nidoran M','Grass',NULL,20,40,'Base'),(56,'Onix','Fighting',NULL,12,90,'Base'),(57,'Pidgey','Colorless',NULL,8,40,'Base'),(58,'Pikachu','Lightning',NULL,12,40,'Base'),(59,'Poliwag','Water',NULL,13,40,'Base'),(60,'Ponyta','Fire',NULL,10,40,'Base'),(61,'Rattata','Colorless',NULL,9,30,'Base'),(62,'Sandshrew','Fighting',NULL,12,40,'Base'),(63,'Squirtle','Water',NULL,8,40,'Base'),(64,'Starmie','Water',NULL,28,60,'Base'),(65,'Staryu','Water',NULL,15,40,'Base'),(66,'Tangela','Grass',NULL,8,50,'Base'),(67,'Voltorb','Lightning',NULL,10,40,'Base'),(68,'Vulpix','Fire',NULL,11,50,'Base'),(69,'Weedle','Grass',NULL,12,40,'Base'),(70,'Clefairy Doll',NULL,NULL,NULL,10,'Base'),(71,'Computer Search',NULL,NULL,NULL,NULL,'Base'),(72,'Devolution Spray',NULL,NULL,NULL,NULL,'Base'),(73,'Impostor Professor Oak',NULL,NULL,NULL,NULL,'Base'),(74,'Item Finder',NULL,NULL,NULL,NULL,'Base'),(75,'Lass',NULL,NULL,NULL,NULL,'Base'),(76,'Pokemon Breeder',NULL,NULL,NULL,NULL,'Base'),(77,'Pokemon Trader',NULL,NULL,NULL,NULL,'Base'),(78,'Scoop Up',NULL,NULL,NULL,NULL,'Base'),(79,'Super Energy Removal',NULL,NULL,NULL,NULL,'Base'),(80,'Defender',NULL,NULL,NULL,NULL,'Base'),(81,'Energy Retrieval',NULL,NULL,NULL,NULL,'Base'),(82,'Full Heal',NULL,NULL,NULL,NULL,'Base'),(83,'Maintenance',NULL,NULL,NULL,NULL,'Base'),(84,'PlusPower',NULL,NULL,NULL,NULL,'Base'),(85,'Pokemon Center',NULL,NULL,NULL,NULL,'Base'),(86,'Pokemon Flute',NULL,NULL,NULL,NULL,'Base'),(87,'Pokedex',NULL,NULL,NULL,NULL,'Base'),(88,'Professor Oak',NULL,NULL,NULL,NULL,'Base'),(89,'Revive',NULL,NULL,NULL,NULL,'Base'),(90,'Super Potion',NULL,NULL,NULL,NULL,'Base'),(91,'Bill',NULL,NULL,NULL,NULL,'Base'),(92,'Energy Removal',NULL,NULL,NULL,NULL,'Base'),(93,'Gust of Wind',NULL,NULL,NULL,NULL,'Base'),(94,'Potion',NULL,NULL,NULL,NULL,'Base'),(95,'Switch',NULL,NULL,NULL,NULL,'Base'),(96,'Double Colorless Energy',NULL,NULL,NULL,NULL,'Base'),(97,'Fighting Energy',NULL,NULL,NULL,NULL,'Base'),(98,'Fire Energy',NULL,NULL,NULL,NULL,'Base'),(99,'Grass Energy',NULL,NULL,NULL,NULL,'Base'),(100,'Lightning Energy',NULL,NULL,NULL,NULL,'Base'),(101,'Psychic Energy',NULL,NULL,NULL,NULL,'Base'),(102,'Water Energy',NULL,NULL,NULL,NULL,'Base');
+INSERT INTO `card` VALUES (1,'Alakazam','Psychic',NULL,NULL,80,'Base'),(2,'Blastoise','Water',NULL,NULL,100,'Base'),(3,'Chansey','Colorless',NULL,NULL,120,'Base'),(4,'Charizard','Fire',NULL,NULL,120,'Base'),(5,'Clefairy','Colorless',NULL,NULL,40,'Base'),(6,'Gyarados','Water',NULL,NULL,100,'Base'),(7,'Hitmonchan','Fighting',NULL,NULL,70,'Base'),(8,'Machamp','Fighting',NULL,NULL,100,'Base'),(9,'Magneton','Lightning',NULL,NULL,60,'Base'),(10,'Mewtwo','Psychic',NULL,NULL,60,'Base'),(11,'Nidoking','Grass',NULL,NULL,90,'Base'),(12,'Ninetales','Fire',NULL,NULL,80,'Base'),(13,'Poliwrath','Water',NULL,NULL,90,'Base'),(14,'Raichu','Lightning',NULL,NULL,80,'Base'),(15,'Venusaur','Grass',NULL,NULL,100,'Base'),(16,'Zapdos','Lightning',NULL,NULL,90,'Base'),(17,'Beedrill','Grass',NULL,NULL,80,'Base'),(18,'Dragonair','Colorless',NULL,NULL,80,'Base'),(19,'Dugtrio','Fighting',NULL,NULL,70,'Base'),(20,'Electabuzz','Lightning',NULL,NULL,70,'Base'),(21,'Electrode','Lightning',NULL,NULL,80,'Base'),(22,'Pidgeotto','Colorless',NULL,NULL,60,'Base'),(23,'Arcanine','Fire',NULL,NULL,100,'Base'),(24,'Charmeleon','Fire',NULL,NULL,80,'Base'),(25,'Dewgong','Water',NULL,NULL,80,'Base'),(26,'Dratini','Colorless',NULL,NULL,40,'Base'),(27,'Farfetch\'d','Colorless',NULL,NULL,50,'Base'),(28,'Growlithe','Fire',NULL,NULL,60,'Base'),(29,'Haunter','Psychic',NULL,NULL,60,'Base'),(30,'Ivysaur','Grass',NULL,NULL,60,'Base'),(31,'Jynx','Psychic',NULL,NULL,70,'Base'),(32,'Kadabra','Psychic',NULL,NULL,60,'Base'),(33,'Kakuna','Grass',NULL,NULL,80,'Base'),(34,'Machoke','Fighting',NULL,NULL,80,'Base'),(35,'Magikarp','Water',NULL,NULL,30,'Base'),(36,'Magmar','Fire',NULL,NULL,50,'Base'),(37,'Nidorino','Grass',NULL,NULL,60,'Base'),(38,'Poliwhirl','Water',NULL,NULL,60,'Base'),(39,'Porygon','Colorless',NULL,NULL,30,'Base'),(40,'Raticate','Colorless',NULL,NULL,60,'Base'),(41,'Seel','Water',NULL,NULL,60,'Base'),(42,'Wartortle','Water',NULL,NULL,70,'Base'),(43,'Abra','Psychic',NULL,NULL,30,'Base'),(44,'Bulbasaur','Grass',NULL,NULL,40,'Base'),(45,'Caterpie','Grass',NULL,NULL,40,'Base'),(46,'Charmander','Fire',NULL,NULL,50,'Base'),(47,'Diglett','Fighting',NULL,NULL,30,'Base'),(48,'Doduo','Colorless',NULL,NULL,50,'Base'),(49,'Drowzee','Psychic',NULL,NULL,50,'Base'),(50,'Gastly','Psychic',NULL,NULL,30,'Base'),(51,'Koffing','Grass',NULL,NULL,50,'Base'),(52,'Machop','Fighting',NULL,NULL,50,'Base'),(53,'Magnemite','Lightning',NULL,NULL,40,'Base'),(54,'Metapod','Grass',NULL,NULL,70,'Base'),(55,'Nidoran M','Grass',NULL,NULL,40,'Base'),(56,'Onix','Fighting',NULL,NULL,90,'Base'),(57,'Pidgey','Colorless',NULL,NULL,40,'Base'),(58,'Pikachu','Lightning',NULL,NULL,40,'Base'),(59,'Poliwag','Water',NULL,NULL,40,'Base'),(60,'Ponyta','Fire',NULL,NULL,40,'Base'),(61,'Rattata','Colorless',NULL,NULL,30,'Base'),(62,'Sandshrew','Fighting',NULL,NULL,40,'Base'),(63,'Squirtle','Water',NULL,NULL,40,'Base'),(64,'Starmie','Water',NULL,NULL,60,'Base'),(65,'Staryu','Water',NULL,NULL,40,'Base'),(66,'Tangela','Grass',NULL,NULL,50,'Base'),(67,'Voltorb','Lightning',NULL,NULL,40,'Base'),(68,'Vulpix','Fire',NULL,NULL,50,'Base'),(69,'Weedle','Grass',NULL,NULL,40,'Base'),(70,'Clefairy Doll',NULL,NULL,NULL,10,'Base'),(71,'Computer Search',NULL,NULL,NULL,NULL,'Base'),(72,'Devolution Spray',NULL,NULL,NULL,NULL,'Base'),(73,'Impostor Professor Oak',NULL,NULL,NULL,NULL,'Base'),(74,'Item Finder',NULL,NULL,NULL,NULL,'Base'),(75,'Lass',NULL,NULL,NULL,NULL,'Base'),(76,'Pokemon Breeder',NULL,NULL,NULL,NULL,'Base'),(77,'Pokemon Trader',NULL,NULL,NULL,NULL,'Base'),(78,'Scoop Up',NULL,NULL,NULL,NULL,'Base'),(79,'Super Energy Removal',NULL,NULL,NULL,NULL,'Base'),(80,'Defender',NULL,NULL,NULL,NULL,'Base'),(81,'Energy Retrieval',NULL,NULL,NULL,NULL,'Base'),(82,'Full Heal',NULL,NULL,NULL,NULL,'Base'),(83,'Maintenance',NULL,NULL,NULL,NULL,'Base'),(84,'PlusPower',NULL,NULL,NULL,NULL,'Base'),(85,'Pokemon Center',NULL,NULL,NULL,NULL,'Base'),(86,'Pokemon Flute',NULL,NULL,NULL,NULL,'Base'),(87,'Pokedex',NULL,NULL,NULL,NULL,'Base'),(88,'Professor Oak',NULL,NULL,NULL,NULL,'Base'),(89,'Revive',NULL,NULL,NULL,NULL,'Base'),(90,'Super Potion',NULL,NULL,NULL,NULL,'Base'),(91,'Bill',NULL,NULL,NULL,NULL,'Base'),(92,'Energy Removal',NULL,NULL,NULL,NULL,'Base'),(93,'Gust of Wind',NULL,NULL,NULL,NULL,'Base'),(94,'Potion',NULL,NULL,NULL,NULL,'Base'),(95,'Switch',NULL,NULL,NULL,NULL,'Base'),(96,'Double Colorless Energy',NULL,NULL,NULL,NULL,'Base'),(97,'Fighting Energy',NULL,NULL,NULL,NULL,'Base'),(98,'Fire Energy',NULL,NULL,NULL,NULL,'Base'),(99,'Grass Energy',NULL,NULL,NULL,NULL,'Base'),(100,'Lightning Energy',NULL,NULL,NULL,NULL,'Base'),(101,'Psychic Energy',NULL,NULL,NULL,NULL,'Base'),(102,'Water Energy',NULL,NULL,NULL,NULL,'Base');
 /*!40000 ALTER TABLE `card` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -82,8 +86,8 @@ DROP TABLE IF EXISTS `collection`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `collection` (
   `CollectionID` int NOT NULL AUTO_INCREMENT,
-  `UserID` int DEFAULT NULL,
-  `Name` varchar(255) DEFAULT NULL,
+  `UserID` int NOT NULL,
+  `Name` varchar(255) NOT NULL,
   `Description` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`CollectionID`),
   KEY `UserID` (`UserID`),
@@ -127,9 +131,13 @@ CREATE TABLE `move` (
   `Description` varchar(255) DEFAULT NULL,
   `Element` varchar(20) DEFAULT NULL,
   `EnergyAmnt` int DEFAULT NULL,
-  PRIMARY KEY (`MoveID`)
+  PRIMARY KEY (`MoveID`),
+  CONSTRAINT `chk_move_damage` CHECK (`Damage` IS NULL OR `Damage` >= 0),
+  CONSTRAINT `chk_move_element` CHECK (`Element` IS NULL OR `Element` IN ('Fire','Water','Grass','Psychic','Lightning','Fighting','Colorless')),
+  CONSTRAINT `chk_move_energy` CHECK (`EnergyAmnt` IS NULL OR `EnergyAmnt` >= 0)
 ) ENGINE=InnoDB AUTO_INCREMENT=99 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Dumping data for table `move`
@@ -151,10 +159,10 @@ DROP TABLE IF EXISTS `trade`;
 CREATE TABLE `trade` (
   `TradeID` int NOT NULL AUTO_INCREMENT,
   `TradeTime` datetime DEFAULT NULL,
-  `InitiatorUserID` int DEFAULT NULL,
-  `ReceiverUserID` int DEFAULT NULL,
-  `InitiatorCardID` int DEFAULT NULL,
-  `ReceiverCardID` int DEFAULT NULL,
+  `InitiatorUserID` int NOT NULL,
+  `ReceiverUserID` int NOT NULL,
+  `InitiatorCardID` int NOT NULL,
+  `ReceiverCardID` int NOT NULL,
   `Status` enum('Request','Accepted','Denied','Blocked') DEFAULT NULL,
   PRIMARY KEY (`TradeID`),
   KEY `InitiatorUserID` (`InitiatorUserID`),
@@ -164,7 +172,9 @@ CREATE TABLE `trade` (
   CONSTRAINT `trade_ibfk_1` FOREIGN KEY (`InitiatorUserID`) REFERENCES `user` (`UserID`),
   CONSTRAINT `trade_ibfk_2` FOREIGN KEY (`ReceiverUserID`) REFERENCES `user` (`UserID`),
   CONSTRAINT `trade_ibfk_3` FOREIGN KEY (`InitiatorCardID`) REFERENCES `card` (`CardID`),
-  CONSTRAINT `trade_ibfk_4` FOREIGN KEY (`ReceiverCardID`) REFERENCES `card` (`CardID`)
+  CONSTRAINT `trade_ibfk_4` FOREIGN KEY (`ReceiverCardID`) REFERENCES `card` (`CardID`),
+  CONSTRAINT `chk_trade_different_users` CHECK (`InitiatorUserID` <> `ReceiverUserID`),
+  CONSTRAINT `chk_trade_different_cards` CHECK (`InitiatorCardID` <> `ReceiverCardID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -186,9 +196,9 @@ DROP TABLE IF EXISTS `transaction`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `transaction` (
   `TransactionID` int NOT NULL AUTO_INCREMENT,
-  `TransactionTime` datetime DEFAULT NULL,
-  `SellerUserID` int DEFAULT NULL,
-  `BuyerUserID` int DEFAULT NULL,
+  `TransactionTime` datetime DEFAULT (NOW()),
+  `SellerUserID` int NOT NULL,
+  `BuyerUserID` int NOT NULL,
   `CardID` int DEFAULT NULL,
   `Price` decimal(10,2) DEFAULT NULL,
   PRIMARY KEY (`TransactionID`),
@@ -197,7 +207,9 @@ CREATE TABLE `transaction` (
   KEY `CardID` (`CardID`),
   CONSTRAINT `transaction_ibfk_1` FOREIGN KEY (`SellerUserID`) REFERENCES `user` (`UserID`),
   CONSTRAINT `transaction_ibfk_2` FOREIGN KEY (`BuyerUserID`) REFERENCES `user` (`UserID`),
-  CONSTRAINT `transaction_ibfk_3` FOREIGN KEY (`CardID`) REFERENCES `card` (`CardID`)
+  CONSTRAINT `transaction_ibfk_3` FOREIGN KEY (`CardID`) REFERENCES `card` (`CardID`),
+  CONSTRAINT `chk_transaction_different_users` CHECK (`SellerUserID` <> `BuyerUserID`),
+  CONSTRAINT `chk_transaction_price` CHECK (`Price` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -220,12 +232,16 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   `UserID` int NOT NULL AUTO_INCREMENT,
   `Role` enum('User','Admin') NOT NULL DEFAULT 'User',
-  `FirstName` varchar(255) DEFAULT NULL,
-  `LastName` varchar(255) DEFAULT NULL,
-  `Username` varchar(255) DEFAULT NULL,
-  `PasswordHash` varchar(255) DEFAULT NULL,
+  `FirstName` varchar(255) NOT NULL,
+  `LastName` varchar(255) NOT NULL,
+  `Username` varchar(255) NOT NULL,
+  `PasswordHash` varchar(255) NOT NULL,
   `PasswordSalt` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`UserID`)
+  PRIMARY KEY (`UserID`),
+  UNIQUE KEY `uq_user_username` (`Username`),
+  CONSTRAINT `chk_user_firstname` CHECK (`FirstName` REGEXP '^[^0-9]+$'),
+  CONSTRAINT `chk_user_lastname` CHECK (`LastName` REGEXP '^[^0-9]+$'),
+  CONSTRAINT `chk_user_password_length` CHECK (LENGTH(`PasswordHash`) >= 8)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -247,11 +263,12 @@ DROP TABLE IF EXISTS `user_card`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_card` (
   `UserCardID` int NOT NULL AUTO_INCREMENT,
-  `UserID` int DEFAULT NULL,
-  `CardID` int DEFAULT NULL,
-  `CollectionID` int DEFAULT NULL,
+  `UserID` int NOT NULL,
+  `CardID` int NOT NULL,
+  `CollectionID` int NOT NULL,
   `Quantity` int DEFAULT NULL,
   PRIMARY KEY (`UserCardID`),
+  UNIQUE KEY `uq_user_card` (`UserID`,`CardID`),
   KEY `UserID` (`UserID`),
   KEY `CardID` (`CardID`),
   KEY `CollectionID` (`CollectionID`),
