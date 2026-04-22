@@ -315,3 +315,301 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2026-04-18 19:52:02
+
+
+-- TRANSACTION 1, BUY/SELL CARD --
+DELIMITER $$
+
+CREATE PROCEDURE sp_buy_sell_card (
+	IN p_seller_id INT,
+    IN p_buyer_id INT,
+    IN p_card_id INT,
+    IN p_price DECIMAL(10, 2)
+    )
+BEGIN
+    DECLARE v_user_card_id INT;
+    DECLARE v_quantity INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+	END;
+    
+    START TRANSACTION;
+    
+    -- VERIFY USER OWNS CARD TO SELL --
+    SELECT UserCardID, Quantity
+    INTO v_user_card_id, v_quantity
+    FROM user_card
+    WHERE UserID = p_seller_id AND CardID = p_card_id
+    FOR UPDATE;
+    
+    IF v_user_card_id IS NULL THEN
+		SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = "User does not own card this card";
+	END IF;
+    
+    IF COALESCE(v_quantity, 0) < 1 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Seller has no copies available to sell.';
+    END IF;
+    
+    -- RECORD TRANSACTION --
+    INSERT INTO transaction (SellerUserID, BuyerUserID, CardID, Price)
+    VALUES (p_seller_id, p_buyer_id, p_card_id, p_price);
+    
+    -- UPDATE SELLER QUANTITY, DELETE ROW IF ONLY COPY --
+    IF v_quantity = 1 THEN
+        DELETE FROM user_card WHERE UserCardID = v_user_card_id;
+    ELSE
+        UPDATE user_card
+        SET    Quantity = Quantity - 1
+        WHERE  UserCardID = v_user_card_id;
+    END IF;
+    
+    -- UPDATE BUYER QUANTITY, CREATE ROW IF NEEDED --
+    INSERT INTO user_card (UserID, CardID, CollectionID, Quantity)
+    VALUES (p_buyer_id, p_card_id,
+            -- Buyer's card goes into their default collection;
+            -- caller should pass a real CollectionID if needed.
+            -- Using a subquery so the FK is always satisfied.
+            (SELECT CollectionID FROM collection
+             WHERE  UserID = p_buyer_id LIMIT 1),
+            1)
+    ON DUPLICATE KEY UPDATE Quantity = Quantity + 1;
+    
+    -- FINISH TRANSACTION --
+	COMMIT;
+END$$
+DELIMITER ;
+
+
+-- TRANSACTION 2, TRADE A CARD --
+DELIMITER $$
+
+CREATE PROCEDURE sp_record_trade (
+	IN p_initiator_user_id INT,
+    IN p_reciever_user_id INT,
+    IN p_initiator_card_id INT,
+    IN p_reciever_card_id INT
+    )
+BEGIN
+	DECLARE v_init_usc_id INT;
+    DECLARE v_recv_usc_id INT;
+    DECLARE v_init_qty INT;
+    DECLARE v_recv_qty INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+    START TRANSACTION;
+    
+    -- VERIFY INITIATOR CARD OWNERSHIP --
+    SELECT UserCardID, Quantity
+    INTO v_init_usc_id, v_init_qty
+    FROM user_card
+    WHERE UserID = p_initiator_user_id AND CardID = p_initiator_card_id
+    FOR UPDATE;
+    
+    IF v_init_uc_id IS NULL OR COALESCE(v_init_qty, 0) < 1 THEN
+        SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Initiator does not own the offered card.';
+    END IF;
+    
+    -- VERIFY RECIEVER CARD OWNERSHIP --
+    SELECT UserCardID, Quantity
+    INTO v_recv_usc_id, v_recv_qty
+    FROM user_card
+    WHERE UserID = p_reciever_user_id AND CardID = p_reciever_card_id
+    FOR UPDATE;
+    
+    IF v_recv_uc_id IS NULL OR COALESCE(v_recv_qty, 0) < 1 THEN
+        SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Reciever does not own the requested card.';
+    END IF;
+    
+    -- INSERT TRADE RECORD --
+    INSERT INTO trade (TradeTime, InitiatorUserID, ReceiverUserID,
+                       InitiatorCardID, ReceiverCardID, Status)
+    VALUES (NOW(), p_initiator_user_id, p_receiver_user_id,
+            p_initiator_card_id, p_receiver_card_id, 'Accepted');
+            
+	-- TRANSFER CARD FROM INITIATOR TO RECEIVER --
+    IF v_init_qty = 1 THEN
+        DELETE FROM user_card WHERE UserCardID = v_init_uc_id;
+    ELSE
+        UPDATE user_card SET Quantity = Quantity - 1
+        WHERE  UserCardID = v_init_uc_id;
+    END IF;
+    
+    INSERT INTO user_card (UserID, CardID, CollectionID, Quantity)
+    VALUES (p_receiver_user_id, p_initiator_card_id,
+            (SELECT CollectionID FROM collection
+             WHERE  UserID = p_receiver_user_id LIMIT 1), 1)
+    ON DUPLICATE KEY UPDATE Quantity = Quantity + 1;
+    
+    -- TRANSFER CARD FROM RECEIVER TO INITIATOR --
+    IF v_recv_qty = 1 THEN
+        DELETE FROM user_card WHERE UserCardID = v_recv_uc_id;
+    ELSE
+        UPDATE user_card SET Quantity = Quantity - 1
+        WHERE  UserCardID = v_recv_uc_id;
+    END IF;
+
+    INSERT INTO user_card (UserID, CardID, CollectionID, Quantity)
+    VALUES (p_initiator_user_id, p_receiver_card_id,
+            (SELECT CollectionID FROM collection
+             WHERE  UserID = p_initiator_user_id LIMIT 1), 1)
+    ON DUPLICATE KEY UPDATE Quantity = Quantity + 1;
+    
+    -- END TRANSACTION --
+    COMMIT;
+END$$
+
+DELIMITER ;
+
+-- TRANSACTION 3, ADD CARD TO BINDER --
+DELIMITER $$
+CREATE PROCEDURE sp_add_card_to_binder (
+	IN p_user_id INT,
+    IN p_card_id INT,
+    IN p_collection_id INT
+)
+
+BEGIN
+	DECLARE v_collection_owner INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+    START TRANSACTION;
+    
+    -- CONFIRM USER OWNS THIS COLLECTION --
+    SELECT UserID
+    INTO v_collection_owner
+    FROM collection
+    WHERE CollectionID = p_collection_id
+    FOR SHARE;
+    
+    IF v_collection_owner IS NULL OR v_collection_owner <> p_user_id THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Collection not found or does not belong to user.';
+    END IF;
+    
+    -- INSERT INTO COLLECTION, UPDATE QUANTITY IF ALREADY EXISTS --
+    INSERT INTO user_card (UserID, CardID, CollectionID, Quantity)
+    VALUES (p_user_id, p_card_id, p_collection_id, 1)
+    ON DUPLICATE KEY UPDATE
+        CollectionID = VALUES(CollectionID),
+        Quantity     = Quantity + 1;
+        
+	-- END TRANSACTION --
+    COMMIT;
+END$$
+
+DELIMITER ;
+
+-- TRANSACTION 4, DELETE A COLLECTION --
+DELIMITER $$
+CREATE PROCEDURE sp_delete_collection (
+	IN p_collection_id INT,
+    IN p_user_id int
+)
+BEGIN
+	DECLARE v_collection_owner INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+    START TRANSACTION;
+    
+    -- CONFIRM OWNERSHIP OF COLLECTION --
+    SELECT UserID
+    INTO v_collection_owner
+    FROM collection
+    WHERE CollectionID = p_collection_id
+    FOR UPDATE;
+    
+    IF v_owner_id IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Collection not found.';
+    END IF;
+    
+    IF v_owner_id <> p_user_id THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Collection does not belong to this user.';
+    END IF;
+    
+    -- DELETE FROM USER_CARD --
+    DELETE FROM user_card
+    WHERE CollectionID = p_collection_id;
+    
+    -- DELETE COLLECTION -
+    DELETE FROM collection
+    WHERE CollectionID = p_collection_id;
+    
+    -- END TRANSACTION --
+    COMMIT;
+END$$
+
+DELIMITER ;
+
+-- TRANSACTION 5, DELETE A CARD --
+DELIMITER $$
+
+CREATE PROCEDURE sp_delete_card (
+	IN p_card_id INT
+)
+BEGIN
+	DECLARE v_exists INT DEFAULT 0;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+    START TRANSACTION;
+    
+    -- MAKE SURE CARD EXISTS --
+    SELECT COUNT(*) INTO v_exists
+    FROM   card
+    WHERE  CardID = p_card_id
+    FOR UPDATE;
+    
+    IF v_exists = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Card not found.';
+    END IF;
+    
+    -- DELETE MOVE ASSOCIATION --
+    DELETE FROM card_move WHERE CardID = p_card_id;
+    
+    -- DELETE USER OWNERSHIP --
+    DELETE FROM user_card WHERE CardID = p_card_id;
+    
+    -- NULLIFY HISTORICAL REFERENCES IN TRADES/BUY/SELL --
+    UPDATE trade
+    SET    InitiatorCardID = NULL
+    WHERE  InitiatorCardID = p_card_id;
+
+    UPDATE trade
+    SET    ReceiverCardID = NULL
+    WHERE  ReceiverCardID = p_card_id;
+    
+    UPDATE transaction SET CardID = NULL WHERE CardID = p_card_id;
+    
+    -- DELETE THE CARD --
+    DELETE FROM card WHERE CardID = p_card_id;
+    
+    -- END TRANSACTION --
+    COMMIT;
+END$$
+
+DELIMITER ;
