@@ -1,0 +1,9 @@
+body { font-family: sans-serif; margin: 1rem; }
+.hidden { display: none; }
+nav a { margin-right: 1rem; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+th { background: #eee; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); }
+.modal-overlay.open { display: flex; align-items: center; justify-content: center; }
+.modal { background: #fff; padding: 1rem; max-width: 400px; width: 100%; }
