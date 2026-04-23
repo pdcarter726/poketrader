@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PokeTrader — Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>PokeTrader</h1>
+
+<div>
+  <button onclick="showTab('login')">Login</button>
+  <button onclick="showTab('register')">Register</button>
+</div>
+
+<form id="login-form" onsubmit="handleLogin(event)">
+  <p><label>Username: <input type="text" id="login-username" required></label></p>
+  <p><label>Password: <input type="password" id="login-password" required></label></p>
+  <p><button type="submit">Login</button></p>
+  <p id="login-error" style="color:red"></p>
+  <p>Demo: <a href="#" onclick="fillDemo('ash','pikachu1')">ash / pikachu1</a> | <a href="#" onclick="fillDemo('admin','admin123')">admin / admin123</a></p>
+</form>
+
+<form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+  <p><label>First Name: <input type="text" id="reg-first" required></label></p>
+  <p><label>Last Name:  <input type="text" id="reg-last" required></label></p>
+  <p><label>Username:   <input type="text" id="reg-username" required></label></p>
+  <p><label>Password (min 8): <input type="password" id="reg-password" minlength="8" required></label></p>
+  <p><label>Confirm Password: <input type="password" id="reg-confirm" required></label></p>
+  <p><button type="submit">Create Account</button></p>
+  <p id="reg-error" style="color:red"></p>
+</form>
+
+<script>
+const MOCK_USERS = [
+  {id:1, username:'ash',   password:'pikachu1', firstName:'Ash',   lastName:'Ketchum', role:'User'},
+  {id:2, username:'admin', password:'admin123', firstName:'Admin',  lastName:'User',    role:'Admin'},
+  {id:3, username:'misty', password:'staryu99', firstName:'Misty', lastName:'Waterflower', role:'User'}
+];
+
+if (sessionStorage.getItem('pt_user')) window.location.href = 'dashboard.html';
+
+function showTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('login-form').classList.toggle('hidden', !isLogin);
+  document.getElementById('register-form').classList.toggle('hidden', isLogin);
+}
+
+function fillDemo(u, p) {
+  document.getElementById('login-username').value = u;
+  document.getElementById('login-password').value = p;
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const user = MOCK_USERS.find(u => u.username === username && u.password === password);
+  if (!user) { errEl.textContent = 'Invalid username or password.'; return; }
+  sessionStorage.setItem('pt_user', JSON.stringify({id:user.id, username:user.username, firstName:user.firstName, lastName:user.lastName, role:user.role}));
+  if (!localStorage.getItem(`pt_collection_${user.id}`)) localStorage.setItem(`pt_collection_${user.id}`, JSON.stringify([]));
+  window.location.href = 'dashboard.html';
+}
+
+function handleRegister(e) {
+  e.preventDefault();
+  const first = document.getElementById('reg-first').value.trim();
+  const last  = document.getElementById('reg-last').value.trim();
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const confirm  = document.getElementById('reg-confirm').value;
+  const errEl = document.getElementById('reg-error');
+  errEl.textContent = '';
+  if (/\d/.test(first) || /\d/.test(last)) { errEl.textContent = 'Names must not contain numbers.'; return; }
+  if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; return; }
+  if (password !== confirm) { errEl.textContent = 'Passwords do not match.'; return; }
+  if (MOCK_USERS.some(u => u.username === username)) { errEl.textContent = 'Username already taken.'; return; }
+  const newUser = {id: MOCK_USERS.length + 1, username, password, firstName: first, lastName: last, role: 'User'};
+  MOCK_USERS.push(newUser);
+  sessionStorage.setItem('pt_user', JSON.stringify({id:newUser.id, username, firstName:first, lastName:last, role:'User'}));
+  localStorage.setItem(`pt_collection_${newUser.id}`, JSON.stringify([]));
+  window.location.href = 'dashboard.html';
+}
+</script>
+</body>
+</html>
