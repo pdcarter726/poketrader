@@ -613,3 +613,122 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+
+
+
+
+-- 1. BEFORE INSERT: Validate Seller Owns The Card
+DELIMITER $$
+CREATE TRIGGER validate_owner
+BEFORE INSERT ON transaction
+FOR EACH ROW
+BEGIN
+	DECLARE card_count INT;
+	
+	SELECT COUNT(*) INTO card_count
+	FROM user_card
+	WHERE UserID = NEW.SellerUserID
+	AND CardID = NEW.CardID;
+	
+	IF card_count = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Seller does not own this card';
+	END IF;
+END $$
+DELIMITER ;
+
+--2. AFTER INSERT: Transfer Ownsership To Buyer
+
+DELIMITER $$
+CREATE TRIGGER transfer_ownership_to_buyer
+AFTER INSERT ON transaction
+FOR EACH ROW
+BEGIN
+	
+	DELETE FROM user_card
+	WHERE UserID = NEW.SellerUserID
+	AND CardID = NEW.CardID;
+	
+	INSERT INTO user_card (UserID, CardID, CollectionID, Quantity)
+	VALUES (NEW.BuyerUserID, NEW.CardID, 1, 1);
+END $$
+DELIMITER ;
+
+--3. BEFORE INSERT: Validate Both Users Own Their Cards
+
+DELIMITER $$
+CREATE TRIGGER validate_traders_ownership
+BEFORE INSERT ON trade
+FOR EACH ROW
+BEGIN
+	DECLARE count1 INT;
+	DECLARE count2 INT;
+	
+	SELECT COUNT(*) INTO count1
+	FROM user_card
+	WHERE UserID = NEW.InitiatorUserID
+	AND CardID = NEW.InitiatorCardID;
+	
+	SELECT COUNT(*) INTO count2
+	FROM user_card
+	WHERE UserID = NEW.ReceiverUserID
+	AND CardID = NEW.ReceiverCardID;
+	
+	IF count1 = 0 OR count2 = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'One or both users do not own their respective card';
+	END IF;
+END $$
+DELIMITER ;
+
+--4. AFTER INSERT: Swap Ownership
+
+DELIMITER $$
+CREATE TRIGGER trade_swap_cards
+AFTER INSERT ON trade
+FOR EACH ROW
+BEGIN
+	DELETE FROM user_card
+	WHERE (UserID = NEW.InitiatorUserID AND CardID = NEW.InitiatorCardID)
+	OR (UserID = NEW.ReceiverUserID AND CardID = NEW.ReceiverCardID);
+		
+	INSERT INTO user_card (UserID, CardID, CollectionID, Quantity)
+	VALUES
+		(NEW.InitiatorUserID, NEW.ReceiverCardID, 1, 1),
+		(NEW.ReceiverUserID, NEW.InitiatorCardID, 1, 1);
+		
+END $$
+DELIMITER ;
+
+--5. BEFORE INSERT: Validate Card & Collection Exists
+
+DELIMITER $$
+CREATE TRIGGER validate_card_collection
+BEFORE INSERT ON user_card
+FOR EACH ROW
+BEGIN
+	DECLARE card_exists INT;
+	DECLARE collection_exists INT;
+	
+	SELECT COUNT(*) INTO card_exists
+	FROM card
+	WHERE CardID = NEW.CardID;
+	
+	SELECT COUNT(*) INTO collection_exists
+	FROM collection
+	WHERE CollectionID = NEW.CollectionID;
+	
+	IF card_exists = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Card does not exist';
+	END IF;
+	
+	IF collection_exists = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Collection does not exist';
+	END IF;
+END $$
+DELIMITER ;
+
+
